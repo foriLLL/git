@@ -59,6 +59,7 @@ int main(int argc, const char **argv)
 	if (!strbuf_getcwd(&tmp))
 		tmp_original_cwd = strbuf_detach(&tmp, NULL);
 
+	/* 似乎是入口 */
 	result = cmd_main(argc, argv);
 
 	/* Not exit(3), but a wrapper calling our common_exit() */

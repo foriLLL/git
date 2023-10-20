@@ -1996,7 +1996,7 @@ static int merge_3way(struct merge_options *opt,
 		name2 = mkpathdup("%s:%s", opt->branch2,  pathnames[2]);
 	}
 
-	read_mmblob(&orig, o);
+	read_mmblob(&orig, o);							// 读出来的数据在这里
 	read_mmblob(&src1, a);
 	read_mmblob(&src2, b);
 
@@ -2050,7 +2050,7 @@ static int handle_content_merge(struct merge_options *opt,
 	assert((S_IFMT & a->mode) == (S_IFMT & b->mode));
 
 	/* Merge modes */
-	if (a->mode == b->mode || a->mode == o->mode)
+	if (a->mode == b->mode || a->mode == o->mode)	// a->mode 是什么东西（33188
 		result->mode = b->mode;
 	else {
 		/* must be the 100644/100755 case */
@@ -2081,13 +2081,13 @@ static int handle_content_merge(struct merge_options *opt,
 	 * setup and already handled, renames don't always take care
 	 * of that.
 	 */
-	if (oideq(&a->oid, &b->oid) || oideq(&a->oid, &o->oid))
+	if (oideq(&a->oid, &b->oid) || oideq(&a->oid, &o->oid))		// a = b 或者 a = o
 		oidcpy(&result->oid, &b->oid);
-	else if (oideq(&b->oid, &o->oid))
+	else if (oideq(&b->oid, &o->oid))						// b = o
 		oidcpy(&result->oid, &a->oid);
 
 	/* Remaining rules depend on file vs. submodule vs. symlink. */
-	else if (S_ISREG(a->mode)) {
+	else if (S_ISREG(a->mode)) {								// 是 regular file
 		mmbuffer_t result_buf;
 		int ret = 0, merge_status;
 		int two_way;
@@ -2096,7 +2096,7 @@ static int handle_content_merge(struct merge_options *opt,
 		 * If 'o' is different type, treat it as null so we do a
 		 * two-way merge.
 		 */
-		two_way = ((S_IFMT & o->mode) != (S_IFMT & a->mode));
+		two_way = ((S_IFMT & o->mode) != (S_IFMT & a->mode));				// #define S_IFMT          0170000         /* [XSI] type of file mask */
 
 		merge_status = merge_3way(opt, path,
 					  two_way ? null_oid() : &o->oid,
@@ -3873,7 +3873,7 @@ static int process_entry(struct merge_options *opt,
 			ci->stages[i].mode = 0;
 			oidcpy(&ci->stages[i].oid, null_oid());
 		}
-	} else if (ci->df_conflict && ci->merged.result.mode != 0) {
+	} else if (ci->df_conflict && ci->merged.result.mode != 0) {			// 在这里处理 D/F 冲突等各类型冲突
 		/*
 		 * This started out as a D/F conflict, and the entries in
 		 * the competing directory were not removed by the merge as
@@ -4089,7 +4089,7 @@ static int process_entry(struct merge_options *opt,
 		}
 	} else if (ci->filemask >= 6) {
 		/* Need a two-way or three-way content merge */
-		struct version_info merged_file;
+		struct version_info merged_file;			// 大于等于 6，即 110 111
 		int clean_merge;
 		struct version_info *o = &ci->stages[0];
 		struct version_info *a = &ci->stages[1];
@@ -4312,7 +4312,7 @@ static int process_entries(struct merge_options *opt,
 		if (mi->clean)
 			record_entry_for_tree(&dir_metadata, path, mi);
 		else {
-			struct conflict_info *ci = (struct conflict_info *)mi;
+			struct conflict_info *ci = (struct conflict_info *)mi;		// 这里是 ci
 			if (process_entry(opt, path, ci, &dir_metadata) < 0) {
 				ret = -1;
 				goto cleanup;
@@ -4806,7 +4806,7 @@ static void merge_start(struct merge_options *opt, struct merge_result *result)
 	trace2_region_leave("merge", "sanity checks", opt->repo);
 
 	/* Default to histogram diff.  Actually, just hardcode it...for now. */
-	opt->xdl_opts = DIFF_WITH_ALG(opt, HISTOGRAM_DIFF);
+	opt->xdl_opts = DIFF_WITH_ALG(opt, HISTOGRAM_DIFF);		// 将 opt->xdl_opts 对应 histogram 的标记位置为 1
 
 	/* Handle attr direction stuff for renormalization */
 	if (opt->renormalize)

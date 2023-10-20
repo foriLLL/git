@@ -731,8 +731,10 @@ fail_pipe:
 	if (cmd->close_object_store)
 		close_object_store(the_repository->objects);
 
+// 控制在 Windows 和非 Windows 平台下如何执行命令
 #ifndef GIT_WINDOWS_NATIVE
 {
+	// 在非 Windows 平台下执行命令
 	int notify_pipe[2];
 	int null_fd = -1;
 	char **childenv;
@@ -768,7 +770,7 @@ fail_pipe:
 	 * never be released in the child process.  This means only
 	 * Async-Signal-Safe functions are permitted in the child.
 	 */
-	cmd->pid = fork();
+	cmd->pid = fork();	// 创建子进程，把子进程的 pid 赋值给 cmd->pid
 	failed_errno = errno;
 	if (!cmd->pid) {
 		int sig;

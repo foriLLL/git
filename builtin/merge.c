@@ -1278,6 +1278,7 @@ int cmd_merge(int argc, const char **argv, const char *prefix)
 	void *branch_to_free;
 	int orig_argc = argc;
 
+	// 打印 git merge -h
 	if (argc == 2 && !strcmp(argv[1], "-h"))
 		usage_with_options(builtin_merge_usage, builtin_merge_options);
 
@@ -1518,6 +1519,7 @@ int cmd_merge(int argc, const char **argv, const char *prefix)
 	if (!remoteheads)
 		; /* already up-to-date */
 	else if (!remoteheads->next)
+		// 这里是会有多个祖先吗？为什么需要用链表存储？ 看 1596 行
 		common = repo_get_merge_bases(the_repository, head_commit,
 					      remoteheads->item);
 	else {
@@ -1538,6 +1540,7 @@ int cmd_merge(int argc, const char **argv, const char *prefix)
 	} else if (!remoteheads ||
 		 (!remoteheads->next && !common->next &&
 		  common->item == remoteheads->item)) {
+		// 应该就是 incoming branch 是 head 的祖先，不用干什么
 		/*
 		 * If head can reach all the merge then we are up to date.
 		 * but first the most common case of merging one remote.
@@ -1680,7 +1683,7 @@ int cmd_merge(int argc, const char **argv, const char *prefix)
 	if (save_state(&stash))
 		oidclr(&stash);
 
-	for (i = 0; i < use_strategies_nr; i++) {
+	for (i = 0; i < use_strategies_nr; i++) {		// 这里只有 1 个：ort
 		int ret, cnt;
 		if (i) {
 			printf(_("Rewinding the tree to pristine...\n"));

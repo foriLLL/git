@@ -53,16 +53,16 @@ static int xdl_append_merge(xdmerge_t **merge, int mode,
 			    long i2, long chg2)
 {
 	xdmerge_t *m = *merge;
-	if (m && (i1 <= m->i1 + m->chg1 || i2 <= m->i2 + m->chg2)) {
+	if (m && (i1 <= m->i1 + m->chg1 || i2 <= m->i2 + m->chg2)) {	// 检查是否存在冲突（即 m 是否非空），并且新的更改是否与当前记录的冲突重叠
 		if (mode != m->mode)
 			m->mode = 0;
-		m->chg0 = i0 + chg0 - m->i0;
+		m->chg0 = i0 + chg0 - m->i0;				// 更新当前冲突的范围，以包括新的更改。
 		m->chg1 = i1 + chg1 - m->i1;
 		m->chg2 = i2 + chg2 - m->i2;
-	} else {
+	} else {							// 如果新的更改不与当前冲突重叠，则创建一个新的冲突记录。
 		m = xdl_malloc(sizeof(xdmerge_t));
 		if (!m)
-			return -1;
+			return -1;					// 如果内存分配失败，则返回错误。
 		m->next = NULL;
 		m->mode = mode;
 		m->i0 = i0;
@@ -71,8 +71,11 @@ static int xdl_append_merge(xdmerge_t **merge, int mode,
 		m->chg1 = chg1;
 		m->i2 = i2;
 		m->chg2 = chg2;
-		if (*merge)
-			(*merge)->next = m;
+		printf("%d", *merge);
+		if (*merge) {						// 多个冲突		// 不是冲突
+			printf("多个冲突，进入merge链表拼接\n");
+			(*merge)->next = m; // 是一个冲突链表, 把这个冲突接到原来的冲突链表之后
+		}
 		*merge = m;
 	}
 	return 0;
@@ -303,14 +306,14 @@ static int xdl_fill_merge_buffer(xdfenv_t *xe1, const char *name1,
 			size += xdl_recs_copy(xe1, i, m->i1 - i, 0, 0,
 					      dest ? dest + size : NULL);
 			/* Postimage from side #1 */
-			if (m->mode & 1) {
+			if (m->mode & 1) {		// 直接应用 side1 内容
 				int needs_cr = is_cr_needed(xe1, xe2, m);
 
 				size += xdl_recs_copy(xe1, m->i1, m->chg1, needs_cr, (m->mode & 2),
 						      dest ? dest + size : NULL);
 			}
 			/* Postimage from side #2 */
-			if (m->mode & 2)
+			if (m->mode & 2)		// 直接应用 side2 内容
 				size += xdl_recs_copy(xe2, m->i2, m->chg2, 0, 0,
 						      dest ? dest + size : NULL);
 		} else
@@ -512,7 +515,7 @@ static int xdl_do_merge(xdfenv_t *xe1, xdchange_t *xscr1,
 	const char *const name1 = xmp->file1;
 	const char *const name2 = xmp->file2;
 	int i0, i1, i2, chg0, chg1, chg2;
-	int level = xmp->level;
+	int level = xmp->level;					// xmp 记录了合并的多个参数
 	int style = xmp->style;
 	int favor = xmp->favor;
 
@@ -531,29 +534,34 @@ static int xdl_do_merge(xdfenv_t *xe1, xdchange_t *xscr1,
 	 * conflict refinement is much more limited in this fashion, the
 	 * conflict simplification will be skipped.
 	 */
-	if (style == XDL_MERGE_DIFF3 || style == XDL_MERGE_ZEALOUS_DIFF3) {
+	if (style == XDL_MERGE_DIFF3 || style == XDL_MERGE_ZEALOUS_DIFF3) {		// 进去了，但是不知道这个调试为什么直接会跳过
 		/*
 		 * "diff3 -m" output does not make sense for anything
 		 * more aggressive than XDL_MERGE_EAGER.
 		 */
 		if (XDL_MERGE_EAGER < level)
-			level = XDL_MERGE_EAGER;
+			level = XDL_MERGE_EAGER;					// level 从 xmp->level = 2 被改为了 1
 	}
 
 	c = changes = NULL;
 
-	while (xscr1 && xscr2) {
+	while (xscr1 && xscr2) {						// 在两边都还有编辑脚本的情况下
+		printf("xscr1 -> i1:%ld, i2:%ld, chg1:%ld, chg2:%ld\n", xscr1->i1, xscr1->i2, xscr1->chg1, xscr1->chg2);
+		printf("xscr2 -> i1:%ld, i2:%ld, chg1:%ld, chg2:%ld\n", xscr2->i1, xscr2->i2, xscr2->chg1, xscr2->chg2);
 		if (!changes)
 			changes = c;
-		if (xscr1->i1 + xscr1->chg1 < xscr2->i1) {
+		if (xscr1->i1 + xscr1->chg1 < xscr2->i1) {			// i1 就是 base 的对应行，如果oa编辑脚本结束的行比 ob 编辑脚本的开始还早，没有冲突    为什么不是小于等于
 			i0 = xscr1->i1;
 			i1 = xscr1->i2;
 			i2 = xscr2->i2 - xscr2->i1 + xscr1->i1;
+			printf("i0=%d, i1=%d, i2=%d\n", i0, i1, i2);
 			chg0 = xscr1->chg1;
 			chg1 = xscr1->chg2;
 			chg2 = xscr1->chg1;
-			if (xdl_append_merge(&c, 1,
+			printf("chg0=%d, chg1=%d, chg2=%d\n", chg0, chg1, chg2);
+			if (xdl_append_merge(&c, 1,				// 注意这里 mode 是 1
 					     i0, chg0, i1, chg1, i2, chg2)) {
+				printf("进入\n");
 				xdl_cleanup_merge(changes);
 				return -1;
 			}
@@ -567,42 +575,51 @@ static int xdl_do_merge(xdfenv_t *xe1, xdchange_t *xscr1,
 			chg0 = xscr2->chg1;
 			chg1 = xscr2->chg1;
 			chg2 = xscr2->chg2;
-			if (xdl_append_merge(&c, 2,
+			if (xdl_append_merge(&c, 2,				// 注意这里 mode 是 2
 					     i0, chg0, i1, chg1, i2, chg2)) {
 				xdl_cleanup_merge(changes);
 				return -1;
 			}
 			xscr2 = xscr2->next;
-			continue;
+			continue;		// 其他条件都 continue 了
 		}
-		if (level == XDL_MERGE_MINIMAL || xscr1->i1 != xscr2->i1 ||
+		if (level == XDL_MERGE_MINIMAL || xscr1->i1 != xscr2->i1 ||	// xscr1->i1 = 0  xscr2->i1 = 1
 				xscr1->chg1 != xscr2->chg1 ||
 				xscr1->chg2 != xscr2->chg2 ||
 				xdl_merge_cmp_lines(xe1, xscr1->i2,
 					xe2, xscr2->i2,
 					xscr1->chg2, xpp->flags)) {
 			/* conflict */
-			int off = xscr1->i1 - xscr2->i1;
-			int ffo = off + xscr1->chg1 - xscr2->chg1;
+			int off = xscr1->i1 - xscr2->i1;		// -1	A 的这个编辑脚本对应 base 的位置比 B 这个编辑脚本对应 base 位置 “开始位置” 的偏下的数量
+			int ffo = off + xscr1->chg1 - xscr2->chg1;	// -1	A 的这个编辑脚本对应 base 的位置比 B 这个编辑脚本对应 base 位置 “结束位置” 的偏下的数量
+			printf("off=%d\n", off);
+			printf("ff0=%d\n", ffo);
 
-			i0 = xscr1->i1;
+			i0 = xscr1->i1;					// 三个版本的开头
 			i1 = xscr1->i2;
 			i2 = xscr2->i2;
+			printf("i0=%d, i1=%d, i2=%d\n", i0, i1, i2);
+
 			if (off > 0) {
 				i0 -= off;
 				i1 -= off;
 			}
 			else
-				i2 += off;
-			chg0 = xscr1->i1 + xscr1->chg1 - i0;
-			chg1 = xscr1->i2 + xscr1->chg2 - i1;
-			chg2 = xscr2->i2 + xscr2->chg2 - i2;
+				i2 += off;				// i2 回退到 off 之前，也就是 i2 和 i1 位置相同
+			chg0 = xscr1->i1 + xscr1->chg1 - i0;		// base 版本的终点 - base 的起点，得到的是
+			chg1 = xscr1->i2 + xscr1->chg2 - i1;		// ours 版本的终点 - ours 的起点，
+			chg2 = xscr2->i2 + xscr2->chg2 - i2;		// 同理
+			printf("xscr2->i2=%ld, xscr2->chg2=%ld, i2=%d\n", xscr2->i2, xscr2->chg2, i2);
+			printf("chg0=%d, chg1=%d, chg2=%d\n", chg0, chg1, chg2);
+
 			if (ffo < 0) {
 				chg0 -= ffo;
 				chg1 -= ffo;
 			} else
 				chg2 += ffo;
-			if (xdl_append_merge(&c, 0,
+			printf("chg0=%d, chg1=%d, chg2=%d\n", chg0, chg1, chg2);
+			// 返回 0 或 -1， -1 即内存分配错误
+			if (xdl_append_merge(&c, 0,				// 注意这里 mode 是 0， 0 代表左右
 					     i0, chg0, i1, chg1, i2, chg2)) {
 				xdl_cleanup_merge(changes);
 				return -1;
@@ -618,6 +635,7 @@ static int xdl_do_merge(xdfenv_t *xe1, xdchange_t *xscr1,
 			xscr1 = xscr1->next;
 	}
 	while (xscr1) {
+		printf("%d", !changes);
 		if (!changes)
 			changes = c;
 		i0 = xscr1->i1;
@@ -634,6 +652,7 @@ static int xdl_do_merge(xdfenv_t *xe1, xdchange_t *xscr1,
 		xscr1 = xscr1->next;
 	}
 	while (xscr2) {
+		printf("%d", !changes);
 		if (!changes)
 			changes = c;
 		i0 = xscr2->i1;
@@ -664,7 +683,7 @@ static int xdl_do_merge(xdfenv_t *xe1, xdchange_t *xscr1,
 	/* output */
 	if (result) {
 		int marker_size = xmp->marker_size;
-		int size = xdl_fill_merge_buffer(xe1, name1, xe2, name2,
+		int size = xdl_fill_merge_buffer(xe1, name1, xe2, name2,			// 根据是否有冲突，判断填充 A 或 B 或
 						 ancestor_name,
 						 favor, changes, NULL, style,
 						 marker_size);
@@ -692,15 +711,15 @@ int xdl_merge(mmfile_t *orig, mmfile_t *mf1, mmfile_t *mf2,
 	result->ptr = NULL;
 	result->size = 0;
 
-	if (xdl_do_diff(orig, mf1, xpp, &xe1) < 0)
+	if (xdl_do_diff(orig, mf1, xpp, &xe1) < 0)	// return 0
 		return -1;
 
-	if (xdl_do_diff(orig, mf2, xpp, &xe2) < 0)
-		goto free_xe1; /* avoid double free of xe2 */
+	if (xdl_do_diff(orig, mf2, xpp, &xe2) < 0)		// xe 下应该已经记载了 ours<->base    base<->theirs  即 char* rchg 每个 char 非零表示已改变
+		goto free_xe1; /* avoid double free of xe2 */		// xe.xdf.nrec 记录 rchg 大小，也就是行数
 
-	if (xdl_change_compact(&xe1.xdf1, &xe1.xdf2, xpp->flags) < 0 ||
+	if (xdl_change_compact(&xe1.xdf1, &xe1.xdf2, xpp->flags) < 0 ||		// 应该是压缩优化 diff 结果
 	    xdl_change_compact(&xe1.xdf2, &xe1.xdf1, xpp->flags) < 0 ||
-	    xdl_build_script(&xe1, &xscr1) < 0)
+	    xdl_build_script(&xe1, &xscr1) < 0)					// Collects "groups" of changes and creates an edit script.
 		goto out;
 
 	if (xdl_change_compact(&xe2.xdf1, &xe2.xdf2, xpp->flags) < 0 ||
@@ -708,7 +727,7 @@ int xdl_merge(mmfile_t *orig, mmfile_t *mf1, mmfile_t *mf2,
 	    xdl_build_script(&xe2, &xscr2) < 0)
 		goto out;
 
-	if (!xscr1) {
+	if (!xscr1) {		// x_script 编辑脚本链表头，类型是 xdchange_t ** 注意是指针的指针
 		result->ptr = xdl_malloc(mf2->size);
 		if (!result->ptr)
 			goto out;
@@ -723,7 +742,7 @@ int xdl_merge(mmfile_t *orig, mmfile_t *mf1, mmfile_t *mf2,
 		memcpy(result->ptr, mf1->ptr, mf1->size);
 		result->size = mf1->size;
 	} else {
-		status = xdl_do_merge(&xe1, xscr1,
+		status = xdl_do_merge(&xe1, xscr1,		// 这里是有了两个编辑脚本后怎么合并的内容
 				      &xe2, xscr2,
 				      xmp, result);
 	}

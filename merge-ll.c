@@ -106,7 +106,7 @@ static enum ll_merge_result ll_xdl_merge(const struct ll_merge_driver *drv_unuse
 			int marker_size)
 {
 	enum ll_merge_result ret;
-	xmparam_t xmp;
+	xmparam_t xmp;		// xmerge_param
 	int status;
 	assert(opts);
 
@@ -116,7 +116,7 @@ static enum ll_merge_result ll_xdl_merge(const struct ll_merge_driver *drv_unuse
 	    buffer_is_binary(orig->ptr, orig->size) ||
 	    buffer_is_binary(src1->ptr, src1->size) ||
 	    buffer_is_binary(src2->ptr, src2->size)) {
-		return ll_binary_merge(drv_unused, result,
+		return ll_binary_merge(drv_unused, result,	// 二进制merge方法
 				       path,
 				       orig, orig_name,
 				       src1, name1,

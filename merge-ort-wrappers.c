@@ -59,7 +59,7 @@ int merge_ort_recursive(struct merge_options *opt,
 
 	memset(&tmp, 0, sizeof(tmp));
 	merge_incore_recursive(opt, merge_bases, side1, side2, &tmp);
-	merge_switch_to_result(opt, head, &tmp, 1, 1);
+	merge_switch_to_result(opt, head, &tmp, 1, 1);	// 在这里写入文件
 	*result = NULL;
 
 	return tmp.clean;

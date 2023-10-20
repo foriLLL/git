@@ -489,6 +489,7 @@ static int run_builtin(struct cmd_struct *p, int argc, const char **argv)
 	return 0;
 }
 
+// 命令 struct 列表
 static struct cmd_struct commands[] = {
 	{ "add", cmd_add, RUN_SETUP | NEED_WORK_TREE },
 	{ "am", cmd_am, RUN_SETUP | NEED_WORK_TREE },
@@ -634,6 +635,7 @@ static struct cmd_struct commands[] = {
 	{ "write-tree", cmd_write_tree, RUN_SETUP },
 };
 
+// 获取命令 struct
 static struct cmd_struct *get_builtin(const char *s)
 {
 	int i;
@@ -690,8 +692,8 @@ static void strip_extension(const char **argv)
 }
 #else
 #define strip_extension(cmd)
-#endif
 
+#endif
 static void handle_builtin(int argc, const char **argv)
 {
 	struct strvec args = STRVEC_INIT;
@@ -785,8 +787,8 @@ static int run_argv(int *argcp, const char ***argv)
 		 */
 		if (!done_alias)
 			handle_builtin(*argcp, *argv);
-		else if (get_builtin(**argv)) {
-			struct child_process cmd = CHILD_PROCESS_INIT;
+		else if (get_builtin(**argv)) {		// 内置命令
+			struct child_process cmd = CHILD_PROCESS_INIT;	// 子线程
 			int i;
 
 			/*
@@ -796,13 +798,13 @@ static int run_argv(int *argcp, const char ***argv)
 			 * command verb to indicate this.  Note that the child
 			 * process will log the actual verb when it runs.
 			 */
-			trace2_cmd_name("_run_git_alias_");
+			trace2_cmd_name("_run_git_alias_");		// log吗？
 
 			commit_pager_choice();
 
 			strvec_push(&cmd.args, "git");
 			for (i = 0; i < *argcp; i++)
-				strvec_push(&cmd.args, (*argv)[i]);
+				strvec_push(&cmd.args, (*argv)[i]);	// 在子线程中 push 进实际的命令
 
 			trace_argv_printf(cmd.args.v, "trace: exec:");
 
@@ -857,6 +859,7 @@ static int run_argv(int *argcp, const char ***argv)
 	return done_alias;
 }
 
+// 定位到这里？
 int cmd_main(int argc, const char **argv)
 {
 	const char *cmd;
@@ -892,8 +895,9 @@ int cmd_main(int argc, const char **argv)
 	/* Look for flags.. */
 	argv++;
 	argc--;
-	handle_options(&argv, &argc, NULL);
+	handle_options(&argv, &argc, NULL);	// 这里是处理参数的地方
 
+	// 打印help
 	if (!argc) {
 		/* The user didn't specify a command; give them help */
 		commit_pager_choice();
@@ -918,6 +922,7 @@ int cmd_main(int argc, const char **argv)
 	 */
 	setup_path();
 
+	// 具体的命令？
 	while (1) {
 		int was_alias = run_argv(&argc, &argv);
 		if (errno != ENOENT)

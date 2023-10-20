@@ -1,0 +1,11 @@
+<<<<<<< HEAD
+            appViewViewModel -> appViewManager.loadDownloadAppViewModel(appViewViewModel.getMd5(),
+                appViewViewModel.getPackageName(), appViewViewModel.getVersionCode())
+||||||| 604da1b
+            appViewViewModel -> appViewManager.getDownloadAppViewModel(appViewViewModel.getMd5(),
+                appViewViewModel.getPackageName(), appViewViewModel.getVersionCode())
+=======
+            appViewViewModel -> appViewManager.getDownloadAppViewModel(appViewViewModel.getMd5(),
+                appViewViewModel.getPackageName(), appViewViewModel.getVersionCode(),
+                appViewViewModel.isPaid(), appViewViewModel.getPay())
+>>>>>>> theirs
