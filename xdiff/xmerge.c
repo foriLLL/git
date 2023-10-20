@@ -53,7 +53,7 @@ static int xdl_append_merge(xdmerge_t **merge, int mode,
 			    long i2, long chg2)
 {
 	xdmerge_t *m = *merge;
-	if (m && (i1 <= m->i1 + m->chg1 || i2 <= m->i2 + m->chg2)) {	// 检查是否存在冲突（即 m 是否非空），并且新的更改是否与当前记录的冲突重叠
+	if (m && (i1 < m->i1 + m->chg1 || i2 < m->i2 + m->chg2)) {	// 检查是否存在冲突（即 m 是否非空），并且新的更改是否与当前记录的冲突重叠
 		if (mode != m->mode)
 			m->mode = 0;
 		m->chg0 = i0 + chg0 - m->i0;				// 更新当前冲突的范围，以包括新的更改。
@@ -550,7 +550,7 @@ static int xdl_do_merge(xdfenv_t *xe1, xdchange_t *xscr1,
 		printf("xscr2 -> i1:%ld, i2:%ld, chg1:%ld, chg2:%ld\n", xscr2->i1, xscr2->i2, xscr2->chg1, xscr2->chg2);
 		if (!changes)
 			changes = c;
-		if (xscr1->i1 + xscr1->chg1 < xscr2->i1) {			// i1 就是 base 的对应行，如果oa编辑脚本结束的行比 ob 编辑脚本的开始还早，没有冲突    为什么不是小于等于
+		if (xscr1->i1 + xscr1->chg1 <= xscr2->i1) {			// i1 就是 base 的对应行，如果oa编辑脚本结束的行比 ob 编辑脚本的开始还早，没有冲突    为什么不是小于等于
 			i0 = xscr1->i1;
 			i1 = xscr1->i2;
 			i2 = xscr2->i2 - xscr2->i1 + xscr1->i1;
@@ -568,7 +568,7 @@ static int xdl_do_merge(xdfenv_t *xe1, xdchange_t *xscr1,
 			xscr1 = xscr1->next;
 			continue;
 		}
-		if (xscr2->i1 + xscr2->chg1 < xscr1->i1) {
+		if (xscr2->i1 + xscr2->chg1 <= xscr1->i1) {
 			i0 = xscr2->i1;
 			i1 = xscr1->i2 - xscr1->i1 + xscr2->i1;
 			i2 = xscr2->i2;
