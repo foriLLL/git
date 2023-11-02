@@ -177,7 +177,7 @@ static int try_lcs(struct histindex *index, struct region *lcs, int b_ptr,
 		index->has_common = 1;			// 在这次两个文件的 histogram diff 中已经确定有匹配项，更新
 		for (;;) {
 			should_break = 0;
-			np = NEXT_PTR(index, as);	// np 指向下一个具有相同哈希值的行	    285 行 index.ptr_shift = line1; 因为是递归调用 histgram_diff 方法，每个方法内偏移量直接初始化为 line1
+			np = NEXT_PTR(index, as);	// np 指向下一个具有相同哈希值的行	    285 行 index.ptr_shift = line1; 因为是递归调用 histogram_diff 方法，每个方法内偏移量直接初始化为 line1
 			bs = b_ptr;			// 记录匹配开始位置
 			ae = as;	// 终点设置为起点，起止相同，向两侧扩散
 			be = bs;
@@ -199,7 +199,7 @@ static int try_lcs(struct histindex *index, struct region *lcs, int b_ptr,
 			}
 
 			if (b_next <= be)
-				b_next = be + 1;	// 匹配的行跳过
+				b_next = be + 1;	// 已经尝试找到最大连续匹配的行跳过
 			if (lcs->end1 - lcs->begin1 < ae - as || rc < index->cnt) {	// 更新 lcs 的位置，要么这个块更大，要么这个块不一定更大，但有一行出现次数更少
 				lcs->begin1 = as;					// 块更大的优先级更高		这里我还要具体确认 rc 的作用
 				lcs->begin2 = bs;
@@ -312,7 +312,7 @@ static int histogram_diff(xpparam_t const *xpp, xdfenv_t *env,
 redo:
 	result = -1;
 
-	if (count1 <= 0 && count2 <= 0)
+	if (count1 <= 0 && count2 <= 0)				// 起点都小于等于0 （向前递归的出口）
 		return 0;
 
 	if (LINE_END(1) >= MAX_PTR)
@@ -335,7 +335,7 @@ redo:
 	else if (lcs_found)
 		result = fall_back_to_classic_diff(xpp, env, line1, count1, line2, count2);
 	else {
-		if (lcs.begin1 == 0 && lcs.begin2 == 0) {			// 0 即没找到公共子序列，把左右两边 line 全部标记为变化
+		if (lcs.begin1 == 0 && lcs.begin2 == 0) {			// begin 下标从 1 开始，若为 0 即没找到公共子序列，把左右两边 line 全部标记为变化
 			while (count1--)
 				env->xdf1.rchg[line1++ - 1] = 1;
 			while (count2--)

@@ -947,9 +947,9 @@ int xdl_build_script(xdfenv_t *xe, xdchange_t **xscr) {		// 编辑脚本是一�
 	 * Trivial. Collects "groups" of changes and creates an edit script.
 	 */
 	for (i1 = xe->xdf1.nrec, i2 = xe->xdf2.nrec; i1 >= 0 || i2 >= 0; i1--, i2--)		// 从后往前, nrec 记录这个版本
-		if (rchg1[i1 - 1] || rchg2[i2 - 1]) {		// 两边都有变化
+		if (rchg1[i1 - 1] || rchg2[i2 - 1]) {		// 任一边有变化
 			for (l1 = i1; rchg1[i1 - 1]; i1--);
-			for (l2 = i2; rchg2[i2 - 1]; i2--);	// l1 l2 找到第一个相同的行  （收集所有连续的变更行）
+			for (l2 = i2; rchg2[i2 - 1]; i2--);	// l1 l2 找到第一个相同的行的下一行  （收集所有连续的变更行）
 			if (!(xch = xdl_add_change(cscr, i1, i2, l1 - i1, l2 - i2))) {		// 对于每一组变更，创建一个 xdchange_t 结构（通过xdl_add_change函数），加入链表头
 				xdl_free_script(cscr);							// 这个结构包含了变更的起始行（i1，i2）以及涉及的行数（l1-i1, l2-i1）
 				return -1;

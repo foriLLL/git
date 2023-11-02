@@ -4695,6 +4695,8 @@ void merge_switch_to_result(struct merge_options *opt,
 		fclose(fp);
 		trace2_region_leave("merge", "write_auto_merge", opt->repo);
 	}
+	printf("exit before commit message\n");
+	exit(0);
 	if (display_update_msgs)
 		merge_display_update_messages(opt, /* detailed */ 0, result);
 

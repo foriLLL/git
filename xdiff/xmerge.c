@@ -71,7 +71,7 @@ static int xdl_append_merge(xdmerge_t **merge, int mode,
 		m->chg1 = chg1;
 		m->i2 = i2;
 		m->chg2 = chg2;
-		printf("%d", *merge);
+		printf("*merge = %d\n", *merge);
 		if (*merge) {						// 多个冲突		// 不是冲突
 			printf("多个冲突，进入merge链表拼接\n");
 			(*merge)->next = m; // 是一个冲突链表, 把这个冲突接到原来的冲突链表之后
@@ -608,7 +608,7 @@ static int xdl_do_merge(xdfenv_t *xe1, xdchange_t *xscr1,
 				i2 += off;				// i2 回退到 off 之前，也就是 i2 和 i1 位置相同
 			chg0 = xscr1->i1 + xscr1->chg1 - i0;		// base 版本的终点 - base 的起点，得到的是
 			chg1 = xscr1->i2 + xscr1->chg2 - i1;		// ours 版本的终点 - ours 的起点，
-			chg2 = xscr2->i2 + xscr2->chg2 - i2;		// 同理
+			chg2 = xscr2->i2 + xscr2->chg2 - i2;		// theirs 版本的终点 - theirs 的起点，
 			printf("xscr2->i2=%ld, xscr2->chg2=%ld, i2=%d\n", xscr2->i2, xscr2->chg2, i2);
 			printf("chg0=%d, chg1=%d, chg2=%d\n", chg0, chg1, chg2);
 
@@ -619,7 +619,7 @@ static int xdl_do_merge(xdfenv_t *xe1, xdchange_t *xscr1,
 				chg2 += ffo;
 			printf("chg0=%d, chg1=%d, chg2=%d\n", chg0, chg1, chg2);
 			// 返回 0 或 -1， -1 即内存分配错误
-			if (xdl_append_merge(&c, 0,				// 注意这里 mode 是 0， 0 代表左右
+			if (xdl_append_merge(&c, 0,				// 注意这里 mode 是 0， 0 代表左右重叠
 					     i0, chg0, i1, chg1, i2, chg2)) {
 				xdl_cleanup_merge(changes);
 				return -1;
@@ -635,7 +635,7 @@ static int xdl_do_merge(xdfenv_t *xe1, xdchange_t *xscr1,
 			xscr1 = xscr1->next;
 	}
 	while (xscr1) {
-		printf("%d", !changes);
+		printf("!changes = %d\n", !changes);
 		if (!changes)
 			changes = c;
 		i0 = xscr1->i1;
@@ -652,7 +652,7 @@ static int xdl_do_merge(xdfenv_t *xe1, xdchange_t *xscr1,
 		xscr1 = xscr1->next;
 	}
 	while (xscr2) {
-		printf("%d", !changes);
+		printf("!changes = %d\n", !changes);
 		if (!changes)
 			changes = c;
 		i0 = xscr2->i1;
